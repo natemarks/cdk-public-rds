@@ -1,5 +1,6 @@
-""" Public RDS stack
-
+#!/usr/bin/env python3
+# pylint: disable=anomalous-backslash-in-string
+""" public test
 """
 from dataclasses import dataclass
 import json
@@ -42,7 +43,7 @@ class RdsStack(Stack):
         self.db_vpc = ec2.Vpc(
             self,
             "PublicRdsVpc",
-            max_azs=1,
+            max_azs=2,
             cidr="10.7.0.0/16",
         )
 
@@ -90,6 +91,7 @@ class RdsStack(Stack):
             self,
             "BootstrapRdsTestRdsInstance",
             engine=engine,
+            publicly_accessible=True,
             parameter_group=parameter_group,
             credentials=rds.Credentials.from_secret(self.master_secret),
             vpc=self.db_vpc,
@@ -103,15 +105,9 @@ class RdsStack(Stack):
             copy_tags_to_snapshot=True,
             deletion_protection=False,
             enable_performance_insights=True,
-            multi_az=True,
-            # parameter_group=,
-            # preferred_backup_window=,
-            # preferred_maintenance_window=,
-            # removal_policy=,
-            # storage_type=,
-            vpc_subnets=ec2.SubnetSelection(
-                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-            ),
+            multi_az=False,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            security_groups=[self.db_sg]
         )
         sm.SecretRotation(
             self,
